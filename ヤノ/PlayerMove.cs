@@ -5,8 +5,8 @@ using UnityEngine;
 public class PlayerMove : MonoBehaviour
 {
     Rigidbody2D rb;
-    public float speed = 6f;
-    public float jump = 100;
+    public float speed = 5f;
+    public float jump = 400;
     public Animator animator;
     AnimatorStateInfo animStateInfo;
     bool ground;
@@ -20,6 +20,7 @@ public class PlayerMove : MonoBehaviour
 
     private float oldJump = 0;
     private float g = (-9.81f);
+    private bool groundFlag;
 
 
     //Use this for initialization
@@ -56,7 +57,7 @@ public class PlayerMove : MonoBehaviour
         }
 
         //何もキーを押していない時はアニメーションをオフにする
-        else  if((Input.GetKey(KeyCode.RightArrow)==false)&& (Input.GetKey(KeyCode.LeftArrow)==false))
+        else if ((Input.GetKey(KeyCode.RightArrow) == false) && (Input.GetKey(KeyCode.LeftArrow) == false))
         {
             animator.SetBool("Running", false);
         }
@@ -75,13 +76,15 @@ public class PlayerMove : MonoBehaviour
             if (flameCount >= 0.12f)
             {
                 jumpBotton = true;
+                groundFlag = false;
             }
             else if (Input.GetButtonUp("Jump"))
             {
                 jumpBotton = true;
+                groundFlag = false;
             }
             else { }
-            
+
         }
 
         //上方向に向けて力を加える
@@ -106,23 +109,14 @@ public class PlayerMove : MonoBehaviour
         // }
 
 
-            if (jumpBotton)
-            {
-                rb.AddForce(new Vector3(speed * (WS - rb.velocity.x), Vector2.up.y + g, 0));
-            }
-            else
-            {
-                rb.AddForce(new Vector3(speed * (WS - rb.velocity.x), 0, 0));
-            }
-
-        //if (jumpBotton)
-        //{
-        //    rb.AddForce(new Vector3(speed * (WS - rb.velocity.x), g * Time.deltaTime, 0));
-        //}
-        //else
-        //{
-        //    rb.AddForce(new Vector3(speed * (WS - rb.velocity.x), 0, 0));
-        //}
+        if (groundFlag==false)
+        {
+            rb.AddForce(new Vector3(speed * (WS - rb.velocity.x), Vector2.up.y + g, 0));
+        }
+        else
+        {
+            rb.AddForce(new Vector3(speed * (WS - rb.velocity.x), 0, 0));
+        }
 
         Vector3 pos = new Vector3(transform.position.x, transform.position.y, transform.position.z);
         RaycastHit2D hit = Physics2D.Raycast(pos, new Vector3(0, 0, 1), 100);
@@ -135,12 +129,21 @@ public class PlayerMove : MonoBehaviour
         if (collision.transform.tag == "Ground")
         {
             animator.SetBool("Jumping", false);
-            if(Input.GetButton("Jump") == false)
+            groundFlag = true;
+            if (Input.GetButton("Jump") == false)
             {
                 jumpBotton = false;
                 flameCount = 0;
                 oldJump = 0f;
             }
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.transform.tag == "Ground")
+        {
+            groundFlag = false;
         }
     }
 }
