@@ -20,14 +20,21 @@ public class PlayerMove : MonoBehaviour
 
     private float oldJump = 0;
     private float g = (-9.81f);
-    private bool groundFlag;
+    private int moveFlag = 0;//0:移動可能　1:右移動不可　2:左移動不可　3:左右移動不可
 
+    RaycastHit2D l_Hit;
+    RaycastHit2D d_Hit;
+    RaycastHit2D r_Hit;
+    Vector2 vec = new Vector2(0, 1);
+    Vector3 tmpPos;
+    private Vector2[] rayDir;
+    private Ray[] ray;
 
     //Use this for initialization
 
     void Start()
     {
-
+        rayDir = new Vector2[] { Vector2.up, Vector2.right , Vector2.down , Vector2.left };
         rb = GetComponent<Rigidbody2D>();
         footArea = this.transform.Find("FootArea").gameObject; // 足元の判定
         groundCheck = footArea.GetComponent<GroundCheck>();
@@ -39,7 +46,49 @@ public class PlayerMove : MonoBehaviour
     //Update is called once per frame
     void FixedUpdate()
     {
-        WS = Input.GetAxis("Horizontal") * speed;
+
+        moveFlag = 0;
+        tmpPos = new Vector3(transform.position.x, transform.position.y + 1, transform.position.z);
+        ray = new Ray[]{
+            new Ray(tmpPos, rayDir[0]),
+            new Ray(tmpPos, rayDir[1]),
+            new Ray(tmpPos, rayDir[2]),
+            new Ray(tmpPos, rayDir[3]) };
+        
+        r_Hit = Physics2D.Raycast(ray[1].origin, ray[1].direction, 0.7f);
+        d_Hit = Physics2D.Raycast(ray[2].origin, ray[2].direction, 1.1f);
+        l_Hit = Physics2D.Raycast(ray[3].origin, ray[3].direction, 0.7f);
+        //Debug.Log(_hit.collider.gameObject.tag);
+        if (d_Hit.collider == null)
+        {
+            //右に移動するのを禁止
+            if (r_Hit.collider != null)
+            {
+                moveFlag += 1;
+            }
+            //左に移動するのを禁止
+            if (l_Hit.collider != null)
+            {
+                moveFlag += 2;
+            }
+        }
+
+        if(moveFlag!=3)
+        {
+            if((Input.GetAxis("Horizontal") > 0) && (moveFlag == 1))
+            {
+                WS = (Input.GetAxis("Horizontal") > 0 ? 0 : Input.GetAxis("Horizontal")) * speed;
+            }
+            else if ((Input.GetAxis("Horizontal") < 0) && (moveFlag == 2))
+            {
+                WS = (Input.GetAxis("Horizontal") < 0 ? 0 : Input.GetAxis("Horizontal")) * speed;
+            }
+            else
+            {
+                WS = Input.GetAxis("Horizontal") * speed;
+            }
+        }
+        
         animStateInfo = animator.GetCurrentAnimatorStateInfo(0); // animatorのStateを取得
 
         //右移動
@@ -62,6 +111,7 @@ public class PlayerMove : MonoBehaviour
             animator.SetBool("Running", false);
         }
 
+
         if (jumpBotton == false)
         {
             //スペースキーでジャンプする
@@ -76,15 +126,12 @@ public class PlayerMove : MonoBehaviour
             if (flameCount >= 0.12f)
             {
                 jumpBotton = true;
-                groundFlag = false;
             }
             else if (Input.GetButtonUp("Jump"))
             {
                 jumpBotton = true;
-                groundFlag = false;
             }
             else { }
-
         }
 
         //上方向に向けて力を加える
@@ -109,7 +156,7 @@ public class PlayerMove : MonoBehaviour
         // }
 
 
-        if (groundFlag==false)
+        if (groundCheck.ground == false)
         {
             rb.AddForce(new Vector3(speed * (WS - rb.velocity.x), Vector2.up.y + g, 0));
         }
@@ -122,14 +169,21 @@ public class PlayerMove : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(pos, new Vector3(0, 0, 1), 100);
 
         // 可視化
-        Debug.DrawRay(pos, new Vector3(0, 100, 0), Color.blue, 1);
+        //Debug.DrawRay(pos, new Vector3(0, 100, 0), Color.blue, 1);
+
+        for(int i=0;i<ray.Length;i++)
+        {
+            Debug.DrawRay(ray[i].origin, ray[i].direction, Color.red, 0.1f);
+
+        }
+        
     }
     private void OnCollisionStay2D(Collision2D collision)
     {
-        if (collision.transform.tag == "Ground")
+        //if (collision.transform.tag == "Ground")
+        if(groundCheck.ground )
         {
             animator.SetBool("Jumping", false);
-            groundFlag = true;
             if (Input.GetButton("Jump") == false)
             {
                 jumpBotton = false;
@@ -139,13 +193,27 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.transform.tag == "Ground")
-        {
-            groundFlag = false;
-        }
-    }
+    //private void OnCollisionEnter2D(Collision2D collision)
+    //{
+    //    if(collision.transform.tag=="Ground")
+    //    {
+    //        r_Hit = Physics2D.Raycast(ray[1].origin, ray[1].direction, 0.7f);
+    //        d_Hit = Physics2D.Raycast(ray[2].origin, ray[2].direction, 1.1f);
+    //        l_Hit = Physics2D.Raycast(ray[3].origin, ray[3].direction, 0.7f);
+    //        //Debug.Log(_hit.collider.gameObject.tag);
+    //        if (d_Hit.collider==null)
+    //        {
+    //            if (r_Hit.collider != null)
+    //            {
+    //                Debug.Log("インド人を右");
+    //            }
+    //            if (l_Hit.collider != null)
+    //            {
+    //                Debug.Log("インド人を左");
+    //            }
+    //        }
+    //    }
+    //}
 }
 
 
