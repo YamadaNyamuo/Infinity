@@ -77,7 +77,7 @@ public class YukaMove : MonoBehaviour {
     {
         if (other.tag == "Player")
         {
-            other.transform.SetParent(transform);
+            other.transform.parent.SetParent(transform);
             plRidoFlag = true;
         }
     }
@@ -86,7 +86,7 @@ public class YukaMove : MonoBehaviour {
     { 
         if (other.tag == "Player")
         {
-            other.transform.SetParent(null);
+            other.transform.parent.SetParent(null);
             plRidoFlag = false;
         }
     }
