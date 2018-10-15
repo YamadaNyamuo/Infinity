@@ -46,7 +46,7 @@ public class YukaMoveB : MonoBehaviour {
     {
         iTweenMoving = false;
 
-        if (moveSteta == MOVE_STETA.RIDO)
+        if (type)
         {
             if (cnt == 0 || cnt == path.Length - 1)
             {
