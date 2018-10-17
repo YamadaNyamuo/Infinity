@@ -1,18 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+
 
 public class PlayerMove : MonoBehaviour
 {
-    Rigidbody2D rb;
-    public float speed = 5f;
-    public float jump = 400;
+    Rigidbody2D rb, targetRb;
+    public float speed = 8f;
+    private float jump = 300;
     public Animator animator;
     AnimatorStateInfo animStateInfo;
     bool ground;
     public float WS;
 
     GameObject footArea;
+    public GameObject target, target2;
     GroundCheck groundCheck;
 
     bool jumpBotton;
@@ -30,10 +33,35 @@ public class PlayerMove : MonoBehaviour
     private Vector2[] rayDir;
     private Ray[] ray;
 
-    //Use this for initialization
+    //public GameObject target, target2;
+    private Vector3 startPosition;
+    float fadeSpeed = 0.02f;
+    float red, green, blue, alfa;
 
+    public bool isFadeOut = false;
+    public bool isFadeIn = false;
+
+    private Image fadeImage;
+
+    public enum Dir
+    {
+        LEFT,  // 左
+        RIGHT, // 右
+        NON    // 方向なっしー！！！ヒャッハーーー！！！！
+    }
+
+    //入力方向
+    public Dir inputDir;
+    //プレイヤーの向いてる向き
+    public Dir drawDir;
+    //前フレームで向いてる方向
+    private Dir oldDir;
+
+    //Use this for initialization
     void Start()
     {
+        inputDir = Dir.NON;
+        drawDir = Dir.RIGHT;
         rayDir = new Vector2[] { Vector2.up, Vector2.right , Vector2.down , Vector2.left };
         rb = GetComponent<Rigidbody2D>();
         footArea = this.transform.Find("FootArea").gameObject; // 足元の判定
@@ -41,12 +69,18 @@ public class PlayerMove : MonoBehaviour
         animator = GetComponent<Animator>();
         //Input.GetAxis("Vertical") * speed;
 
+        targetRb = target.GetComponent<Rigidbody2D>();
+        startPosition = target.transform.position;
+        fadeImage = target2.GetComponent<Image>();
+        red = fadeImage.color.r;
+        green = fadeImage.color.g;
+        blue = fadeImage.color.b;
+        alfa = fadeImage.color.a;
     }
 
     //Update is called once per frame
     void FixedUpdate()
     {
-
         moveFlag = 0;
         tmpPos = new Vector3(transform.position.x, transform.position.y + 1, transform.position.z);
         ray = new Ray[]{
@@ -54,7 +88,7 @@ public class PlayerMove : MonoBehaviour
             new Ray(tmpPos, rayDir[1]),
             new Ray(tmpPos, rayDir[2]),
             new Ray(tmpPos, rayDir[3]) };
-        
+
         r_Hit = Physics2D.Raycast(ray[1].origin, ray[1].direction, 0.7f);
         d_Hit = Physics2D.Raycast(ray[2].origin, ray[2].direction, 1.1f);
         l_Hit = Physics2D.Raycast(ray[3].origin, ray[3].direction, 0.7f);
@@ -73,9 +107,9 @@ public class PlayerMove : MonoBehaviour
             }
         }
 
-        if(moveFlag!=3)
+        if (moveFlag != 3)
         {
-            if((Input.GetAxis("Horizontal") > 0) && (moveFlag == 1))
+            if ((Input.GetAxis("Horizontal") > 0) && (moveFlag == 1))
             {
                 WS = (Input.GetAxis("Horizontal") > 0 ? 0 : Input.GetAxis("Horizontal")) * speed;
             }
@@ -88,7 +122,30 @@ public class PlayerMove : MonoBehaviour
                 WS = Input.GetAxis("Horizontal") * speed;
             }
         }
-        
+
+        if (Input.GetAxis("Horizontal") > 0)
+        {
+            inputDir = Dir.RIGHT;
+        }
+        else if (Input.GetAxis("Horizontal") < 0)
+        {
+            inputDir = Dir.LEFT;
+        }
+        else
+        {
+            inputDir = Dir.NON;
+        }
+
+        if (inputDir == Dir.NON)
+        {
+            oldDir = drawDir;
+            drawDir = oldDir;
+        }
+        else
+        {
+            drawDir = inputDir;
+        }
+
         animStateInfo = animator.GetCurrentAnimatorStateInfo(0); // animatorのStateを取得
 
         //右移動
@@ -111,7 +168,6 @@ public class PlayerMove : MonoBehaviour
             animator.SetBool("Running", false);
         }
 
-
         if (jumpBotton == false)
         {
             //スペースキーでジャンプする
@@ -121,17 +177,28 @@ public class PlayerMove : MonoBehaviour
                 rb.AddForce(new Vector3(0, (jump - oldJump) * Vector2.up.y, 0));
                 flameCount = flameCount + 1 * Time.deltaTime;
                 oldJump = jump - (jump / 10);
+                //ジャンプアニメーション中に地面に着いたらもう一度再生する
+                if (animStateInfo.fullPathHash == Animator.StringToHash("Base Layer.Jump"))
+                {
+                    animator.Play("Base Layer.Jump", 0, 0.0f);
+                }
+                else if (animStateInfo.fullPathHash != Animator.StringToHash("Base Layer.Jump"))
+                {
+                    animator.Play("Base Layer.Jump", 0, 0.0f);
+                }
                 //Input.GetAxis("jump");
             }
-            if (flameCount >= 0.12f)
+
+            if (Input.GetButtonUp("Jump"))
             {
                 jumpBotton = true;
             }
-            else if (Input.GetButtonUp("Jump"))
+            else if (flameCount >= 0.30f)
             {
                 jumpBotton = true;
             }
             else { }
+
         }
 
         //上方向に向けて力を加える
@@ -169,19 +236,16 @@ public class PlayerMove : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(pos, new Vector3(0, 0, 1), 100);
 
         // 可視化
-        //Debug.DrawRay(pos, new Vector3(0, 100, 0), Color.blue, 1);
+        Debug.DrawRay(pos, new Vector3(0, 100, 0), Color.blue, 1);
 
-        for(int i=0;i<ray.Length;i++)
+        for (int i = 0; i < ray.Length; i++)
         {
             Debug.DrawRay(ray[i].origin, ray[i].direction, Color.red, 0.1f);
-
         }
-        
     }
     private void OnCollisionStay2D(Collision2D collision)
     {
-        //if (collision.transform.tag == "Ground")
-        if(groundCheck.ground )
+        if (groundCheck.ground == true)
         {
             animator.SetBool("Jumping", false);
             if (Input.GetButton("Jump") == false)
@@ -193,28 +257,68 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    //private void OnCollisionEnter2D(Collision2D collision)
+    //private void OnCollisionExit2D(Collision2D collision)
     //{
-    //    if(collision.transform.tag=="Ground")
+    //    if (collision.transform.tag == "Ground")
     //    {
-    //        r_Hit = Physics2D.Raycast(ray[1].origin, ray[1].direction, 0.7f);
-    //        d_Hit = Physics2D.Raycast(ray[2].origin, ray[2].direction, 1.1f);
-    //        l_Hit = Physics2D.Raycast(ray[3].origin, ray[3].direction, 0.7f);
-    //        //Debug.Log(_hit.collider.gameObject.tag);
-    //        if (d_Hit.collider==null)
-    //        {
-    //            if (r_Hit.collider != null)
-    //            {
-    //                Debug.Log("インド人を右");
-    //            }
-    //            if (l_Hit.collider != null)
-    //            {
-    //                Debug.Log("インド人を左");
-    //            }
-    //        }
+    //        groundFlag = false;
     //    }
     //}
+
+    void OnCollisionEnter2D(Collision2D other)
+    {
+        if (other.gameObject.tag == "Death")
+        {
+            isFadeOut = true;
+        }
+    }
+
+    void Update()
+    {
+        if (isFadeIn)
+        {
+            StartFadeIn();
+        }
+
+        if (isFadeOut)
+        {
+            StartFadeOut();
+        }
+    }
+
+    void StartFadeIn()
+    {
+        alfa -= fadeSpeed;
+        SetAlpha();
+        if (alfa <= 0)
+        {
+            isFadeIn = false;
+            fadeImage.enabled = false;
+        }
+    }
+
+    void StartFadeOut()
+    {
+        fadeImage.enabled = true;
+        alfa += fadeSpeed;
+        SetAlpha();
+        if (alfa >= 1)
+        {
+            target.transform.position = startPosition;
+            targetRb.gravityScale = 1;
+
+            isFadeOut = false;
+
+            if (groundCheck.ground == true)
+            {
+                isFadeIn = true;
+            }
+
+        }
+    }
+
+    void SetAlpha()
+    {
+        fadeImage.color = new Color(red, green, blue, alfa);
+    }
 }
-
-
-
