@@ -64,8 +64,13 @@ public class FadeImage : UnityEngine.UI.Graphic , IFade
 		material.SetColor ("_Color", color);
 	}
 
-	#if UNITY_EDITOR
-	protected override void OnValidate ()
+    public float GetCutoutRange()
+    {
+        return cutoutRange;
+    }
+
+#if UNITY_EDITOR
+    protected override void OnValidate ()
 	{
 		base.OnValidate ();
 		UpdateMaskCutout (Range);
