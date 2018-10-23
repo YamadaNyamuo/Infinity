@@ -7,7 +7,7 @@ public class Test : MonoBehaviour {
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Z))
+        if (Input.GetKeyUp(KeyCode.Z))
         {
             fade.FadeIn(0.5f, () => print("フェードイン完了"));
         }

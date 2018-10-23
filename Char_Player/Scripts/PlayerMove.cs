@@ -41,7 +41,7 @@ public class PlayerMove : MonoBehaviour
     public bool isFadeOut = false;
     public bool isFadeIn = false;
 
-    private Image fadeImage;
+    private bool DeathFlag;
 
     public enum Dir
     {
@@ -56,6 +56,8 @@ public class PlayerMove : MonoBehaviour
     private Dir drawDir;
     //前フレームで向いてる方向
     private Dir oldDir;
+
+    private LoadSceneManager loadSceneManager;
 
     //Use this for initialization
     void Start()
@@ -72,11 +74,8 @@ public class PlayerMove : MonoBehaviour
         targetRb = target.GetComponent<Rigidbody2D>();
         //target.transform.position = aaa.startPosition;
         startPosition = target.transform.position;
-        fadeImage = target2.GetComponent<Image>();
-        red = fadeImage.color.r;
-        green = fadeImage.color.g;
-        blue = fadeImage.color.b;
-        alfa = fadeImage.color.a;
+        DeathFlag = false;
+        loadSceneManager = GameObject.Find("Management").GetComponent<LoadSceneManager>();
     }
 
     //Update is called once per frame
@@ -282,72 +281,22 @@ public class PlayerMove : MonoBehaviour
                 oldJump = 0f;
             }
         }
+        if ((collision.gameObject.tag == "Death") || (collision.gameObject.tag == "Enemy"))
+        {
+            if(DeathFlag==false)
+            {
+                loadSceneManager.FadeAndLoadScene("DefaulStageScenes");
+                DeathFlag = true;
+            }
+        }
     }
 
 
     void OnCollisionEnter2D(Collision2D other)
     {
-        if ((other.gameObject.tag == "Death")||(other.gameObject.tag == "Enemy"))
-        {
-            // フェードイン中だったら中断させてフェードアウトに移行
-            if (isFadeIn == true)
-            {
-                isFadeIn = false;
-            }
-
-            isFadeOut = true;
-        }
+        
     }
 
-    void Update()
-    {
-        if (isFadeIn)
-        {
-            StartFadeIn();
-        }
-
-        if (isFadeOut)
-        {
-            StartFadeOut();
-        }
-    }
-
-    void StartFadeIn()
-    {
-        alfa -= fadeSpeed;
-        SetAlpha();
-        if (alfa <= 0)
-        {
-            isFadeIn = false;
-            fadeImage.enabled = false;
-        }
-    }
-
-    void StartFadeOut()
-    {
-        fadeImage.enabled = true;
-        alfa += fadeSpeed;
-        SetAlpha();
-        if (alfa >= 1)
-        {
-            target.transform.position = startPosition;
-            targetRb.gravityScale = 1;
-
-            isFadeOut = false;
-
-            // フェードアウトが終わったらフェードイン
-            if (isFadeOut == false)
-            {
-                isFadeIn = true;
-            }
-
-        }
-    }
-
-    void SetAlpha()
-    {
-        fadeImage.color = new Color(red, green, blue, alfa);
-    }
 
     public Dir GetPlayerDir()
     {

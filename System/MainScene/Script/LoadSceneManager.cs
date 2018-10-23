@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 
 public class LoadSceneManager : MonoBehaviour {
@@ -10,6 +11,11 @@ public class LoadSceneManager : MonoBehaviour {
 
     //シーン用データ
     private SceneData sceneData;
+
+    //
+    public Fade fade;
+
+    public FadeImage fadeImage;
 
     // Use this for initialization
     IEnumerator Start()
@@ -31,8 +37,9 @@ public class LoadSceneManager : MonoBehaviour {
 
         //現在のシーンデータを取得
         sceneData = FindObjectOfType(typeof(SceneData)) as SceneData;
+
         //他のシーンへ遷移する時にフェードアウト
-        
+        yield return StartCoroutine(fade.FadeinCoroutine(0.5f, null));
 
         Destroy(FindObjectOfType(typeof(AudioListener)));
         unLoadScene = SceneManager.GetActiveScene();
@@ -48,8 +55,8 @@ public class LoadSceneManager : MonoBehaviour {
 
 
         ////フェードイン
+        yield return StartCoroutine(fade.FadeoutCoroutine(0.5f, null));
 
-        
     }
 
     IEnumerator LoadNewScene(string sceneName)
@@ -70,5 +77,4 @@ public class LoadSceneManager : MonoBehaviour {
         yield return SceneManager.UnloadScene(unLoadScene.buildIndex);
         //yield return SceneManager.UnloadSceneAsync(unLoadScene.buildIndex);
     }
-
 }
