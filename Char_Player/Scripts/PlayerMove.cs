@@ -33,7 +33,7 @@ public class PlayerMove : MonoBehaviour
     private Ray[] ray;
 
     //public GameObject target, target2;
-    public CheckPointData aaa;
+    public CheckPointData checkPointData;
     private Vector3 startPosition;
     float fadeSpeed = 0.02f;
     float red, green, blue, alfa;
@@ -70,10 +70,11 @@ public class PlayerMove : MonoBehaviour
         groundCheck = footArea.GetComponent<GroundCheck>();
         animator = GetComponent<Animator>();
         //Input.GetAxis("Vertical") * speed;
-
-        targetRb = target.GetComponent<Rigidbody2D>();
+        
+        //targetRb = target.GetComponent<Rigidbody2D>();
         //target.transform.position = aaa.startPosition;
-        startPosition = target.transform.position;
+        transform.position = checkPointData.startPosition;
+        //startPosition =
         DeathFlag = false;
         loadSceneManager = GameObject.Find("Management").GetComponent<LoadSceneManager>();
     }
@@ -290,13 +291,6 @@ public class PlayerMove : MonoBehaviour
             }
         }
     }
-
-
-    void OnCollisionEnter2D(Collision2D other)
-    {
-        
-    }
-
 
     public Dir GetPlayerDir()
     {
