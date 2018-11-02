@@ -13,29 +13,39 @@ public class BulletFunc : MonoBehaviour {
     public float SPEED;
     //プレイヤーの情報　これの発射元から取ってきてる
     GameObject Player;
-
     //プレイヤーと飛んでる敵の間の距離をｘ軸とy軸に分けてある
     float tX;
     float tY;
     float alfa;
     Vector3 angle;
+    //親のオブジェクト
+    public GameObject parent;
+    ShotFunc p;
 
     // Use this for initialization
     void Start () {
         Player = GameObject.Find("Player");
         Position = transform.position;
-        //スピードはプレイヤー参照して変える
-        SPEED = 6.0f;
         angle = (PPos - transform.position);
         angle = angle / angle.magnitude;
+        parent = transform.root.gameObject;
+        p = parent.GetComponent<ShotFunc>();
+        //スピードはプレイヤー参照して変える
+        SPEED = p.shotSpeed;
     }
 	
 	// Update is called once per frame
 	void Update () {
+    ShotFunc p = parent.GetComponent<ShotFunc>();
 
         //画面外に出たらこのオブジェクトを消す
-        if (!GetComponent<Renderer>().isVisible)
+        if (GetComponent<Renderer>().isVisible)
         {
+            p.Flag(true);
+        }
+        else
+        {
+            p.Flag(false);
             Destroy(this.gameObject);
         }
     }
