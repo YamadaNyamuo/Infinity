@@ -76,6 +76,10 @@ public class ShotFunc : MonoBehaviour {
                 //違えば処理なし
             }
         }
+        else
+        {
+            //処理なし
+        }
     }
     //外から攻撃するフラグ変えるやつ
     public void Flag(bool flag)

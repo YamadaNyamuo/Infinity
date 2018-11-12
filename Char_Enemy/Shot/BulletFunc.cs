@@ -19,7 +19,7 @@ public class BulletFunc : MonoBehaviour {
     float alfa;
     Vector3 angle;
     //親のオブジェクト
-    public GameObject parent;
+    private GameObject parent;
     ShotFunc p;
 
     // Use this for initialization
@@ -30,6 +30,7 @@ public class BulletFunc : MonoBehaviour {
         angle = angle / angle.magnitude;
         parent = transform.root.gameObject;
         p = parent.GetComponent<ShotFunc>();
+        p.Flag(true);
         //スピードはプレイヤー参照して変える
         SPEED = p.shotSpeed;
     }
@@ -39,14 +40,15 @@ public class BulletFunc : MonoBehaviour {
     ShotFunc p = parent.GetComponent<ShotFunc>();
 
         //画面外に出たらこのオブジェクトを消す
-        if (GetComponent<Renderer>().isVisible)
+        if (!GetComponent<Renderer>().isVisible)
         {
-            p.Flag(true);
+            Debug.Log("hakugyoukurou");
+            p.Flag(false);
+            Destroy(this.gameObject);
         }
         else
         {
-            p.Flag(false);
-            Destroy(this.gameObject);
+            //処理なし
         }
     }
 
